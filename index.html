@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProPiel - AI Skin Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // or 'media'
+        theme: {
+          extend: {
+            colors: {
+              primary: 'var(--color-primary)', // Use CSS variable
+              'primary-content': 'var(--color-primary-content)', // Use CSS variable
+              'base-100': 'oklch(var(--b1) / <alpha-value>)', 
+              'base-content': 'oklch(var(--bc) / <alpha-value>)',
+              'nav-inactive': '#999999',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'], 
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      /* Define theme color CSS variables */
+      :root {
+        --color-primary: #14e3eb;
+        --color-primary-content: #004A4F;
+        /* Define other global CSS variables if needed */
+      }
+
+      /* Example: If dark mode had different primary colors, they could be set here, but ProPiel uses consistent primary colors.
+      .dark {
+        --color-primary: #another-value-for-dark;
+        --color-primary-content: #another-value-for-dark;
+      }
+      */
+
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      /* Custom scrollbar for a cleaner look */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-primary); /* Use CSS variable */
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #0fa7af; /* Could also be a darker shade of primary via CSS var if defined */
+      }
+      .filter-white-icon {
+        filter: brightness(0) invert(1);
+      }
+
+      /* Face Scan Animation Styles */
+      .scan-line {
+        animation: sweep 3s ease-in-out infinite;
+      }
+      @keyframes sweep {
+        0%, 100% { transform: translateY(-15%); }
+        50% { transform: translateY(15%); }
+      }
+      .scan-dot {
+        animation: pulse-dot 2s ease-in-out infinite;
+      }
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+      }
+      .scan-dot-1 { animation-delay: 0s; }
+      .scan-dot-2 { animation-delay: 0.2s; }
+      .scan-dot-3 { animation-delay: 0.4s; }
+      .scan-dot-4 { animation-delay: 0.6s; }
+      .scan-dot-5 { animation-delay: 0.8s; }
+
+      /* Typing cursor animation */
+      .typing-cursor {
+        animation: blink 1s step-end infinite;
+        margin-left: 2px; /* Optional: adds a little space before the cursor */
+        font-weight: 300; /* Optional: makes cursor a bit thinner */
+      }
+      @keyframes blink {
+        from, to { color: transparent; } /* Use color for theme compatibility */
+        50% { color: inherit; } /* Inherits text color */
+      }
+
+      /* Dark mode logo adjustment - REMOVED as separate images are used now */
+      /*
+      .dark .propiel-logo-img {
+        filter: invert(1) hue-rotate(180deg);
+      }
+      */
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@0.14.0",
+    "jspdf": "https://esm.sh/jspdf@2.5.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
