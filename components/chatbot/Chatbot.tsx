@@ -200,7 +200,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
       
       const botMessage: ChatMessage = {
         id: Date.now().toString() + '-bot',
-        text: botResponseText,
+        text: botResponseText || t('chatbotNoResponse') || '',
         sender: 'bot',
         timestamp: new Date(),
       };

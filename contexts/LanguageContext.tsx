@@ -128,6 +128,10 @@ const esTranslations: Translations = {
   chatbotQuickReply2: "Tengo un brote, ¿qué hago?",
   chatbotQuickReply3: "Consejos de hidratación",
   chatbotQuickReply4: "Mejorar textura piel",
+  chatbotErrorUnsupportedSpeech: "El reconocimiento de voz no es compatible con este dispositivo o sistema.",
+  chatbotErrorSpeechStop: "Error al detener el reconocimiento de voz: {{message}}",
+  chatbotStartRecording: "Iniciar grabación de voz", // Para la etiqueta aria-label del botón
+  chatbotStopRecording: "Detener grabación de voz", // Para la etiqueta aria-label del botón
   // Gemini Prompts
   geminiSystemInstruction: `Eres "ProPiel Chatbot", un amigable y experto asistente virtual especializado en el cuidado de la piel. Tu objetivo es ayudar a los usuarios con sus dudas sobre productos de belleza, rutinas diarias, problemas como brotes de acné, y consejos para hábitos saludables. Comunícate exclusivamente en español. Sé conciso (1-3 frases). Usa emojis ✨😊💧🍎💡.
 Si el usuario envía una imagen junto con su pregunta (o solo una imagen), ANALIZA DETALLADAMENTE la imagen y úsala como CONTEXTO PRINCIPAL para tu respuesta. Describe lo que ves en la imagen si es relevante para la pregunta o para dar una recomendación.
@@ -321,6 +325,10 @@ const enTranslations: Translations = {
   chatbotQuickReply2: "I have a breakout, what to do?",
   chatbotQuickReply3: "Hydration tips",
   chatbotQuickReply4: "Improve skin texture",
+  chatbotErrorUnsupportedSpeech: "Speech recognition is not supported on this device or system.",
+  chatbotErrorSpeechStop: "Error stopping speech recognition: {{message}}",
+  chatbotStartRecording: "Start voice recording",
+  chatbotStopRecording: "Stop voice recording",
   // Gemini Prompts
   geminiSystemInstruction: `You are "ProPiel Chatbot", a friendly and expert virtual assistant specializing in skincare. Your goal is to help users with questions about beauty products, daily routines, issues like acne breakouts, and tips for healthy habits. Communicate exclusively in English. Be concise (1-3 sentences). Use emojis ✨😊💧🍎💡.
 If the user sends an image along with their question (or just an image), ANALYZE the image IN DETAIL and use it as the PRIMARY CONTEXT for your response. Describe what you see in the image if it's relevant to the question or for giving a recommendation.

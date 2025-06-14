@@ -9,6 +9,10 @@ import ProductRecommendationCard from './ProductRecommendationCard';
 import WellnessTipCard from './WellnessTipCard';
 import { ChevronDownIcon, InfoIcon, DownloadIcon } from './icons';
 import { useTranslation } from '../contexts/LanguageContext';
+// IMPORTS NUEVOS:
+import { Filesystem, Directory } from '@capacitor/filesystem'; // Asegúrate de haber instalado @capacitor/filesystem
+import { Capacitor } from '@capacitor/core'; // Necesario para detectar si estamos en una plataforma nativa
+
 
 interface AnalysisDisplayProps {
   analysisData: SkinAnalysisData;
@@ -253,8 +257,29 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisData, onReset
       yPos = addText(t('analysisDisclaimer'), margin, yPos + 2, {}, contentWidth);
 
       const filename = `ProPiel_Analysis_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(filename);
-      setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') });
+      // --- INICIO DE LA MODIFICACIÓN ---
+      if (Capacitor.isNativePlatform()) { //
+        const pdfOutput = doc.output('datauristring'); // Obtiene el PDF como data URI (Base64 con prefijo)
+        const pdfBase64Data = pdfOutput.split(',')[1]; // Extrae la parte Base64 pura
+
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: pdfBase64Data, //
+            directory: Directory.Documents, // Guardar en la carpeta Documentos
+            recursive: true // Crea directorios si no existen
+          });
+          setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') + ' (Guardado en Documentos)' });
+        } catch (e) {
+          console.error("Error al guardar PDF en dispositivo:", e);
+          setPdfMessage({ type: 'error', text: t('pdfErrorMessage') + ' (Error de almacenamiento)' });
+        }
+      } else {
+        // Lógica para navegadores web (lo que ya tenías con doc.save)
+        doc.save(filename); //
+        setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') });
+      }
+      // --- FIN DE LA MODIFICACIÓN ---
 
     } catch (error) {
       console.error("Failed to generate PDF:", error);
