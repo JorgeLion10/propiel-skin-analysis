@@ -97,6 +97,10 @@ const esTranslations: Translations = {
   pdfSuccessMessage: "¡PDF descargado con éxito!",
   pdfErrorMessage: "Error al generar PDF. Inténtalo de nuevo.",
   pdfDisclaimerTitle: "Descargo de Responsabilidad",
+  pdfOpening: "Abriendo PDF...", // <-- NUEVO
+  pdfNoUri: "URI del archivo no disponible.", // <-- NUEVO
+  pdfStorageError: "Error de almacenamiento.", // <-- NUEVO
+  pdfPermissionDenied: "Permiso denegado. Concede acceso a almacenamiento.", // <-- NUEVO
   // Skincare Routine Section
   routineMorning: "Rutina de Mañana",
   routineEvening: "Rutina de Noche",
@@ -128,6 +132,7 @@ const esTranslations: Translations = {
   chatbotQuickReply2: "Tengo un brote, ¿qué hago?",
   chatbotQuickReply3: "Consejos de hidratación",
   chatbotQuickReply4: "Mejorar textura piel",
+  chatbotListeningPlaceholder: "Escuchando...",
   chatbotErrorUnsupportedSpeech: "El reconocimiento de voz no es compatible con este dispositivo o sistema.",
   chatbotErrorSpeechStop: "Error al detener el reconocimiento de voz: {{message}}",
   chatbotStartRecording: "Iniciar grabación de voz", // Para la etiqueta aria-label del botón
@@ -294,6 +299,10 @@ const enTranslations: Translations = {
   pdfSuccessMessage: "PDF downloaded successfully!",
   pdfErrorMessage: "Failed to generate PDF. Please try again.",
   pdfDisclaimerTitle: "Disclaimer",
+  pdfOpening: "Opening PDF...", // <-- NUEVO
+  pdfNoUri: "File URI not available.", // <-- NUEVO
+  pdfStorageError: "Storage error.", // <-- NUEVO
+  pdfPermissionDenied: "Permission denied. Grant storage access.", // <-- NUEVO
   // Skincare Routine Section
   routineMorning: "Morning Routine",
   routineEvening: "Evening Routine",
@@ -325,6 +334,7 @@ const enTranslations: Translations = {
   chatbotQuickReply2: "I have a breakout, what to do?",
   chatbotQuickReply3: "Hydration tips",
   chatbotQuickReply4: "Improve skin texture",
+  chatbotListeningPlaceholder: "Listening...",
   chatbotErrorUnsupportedSpeech: "Speech recognition is not supported on this device or system.",
   chatbotErrorSpeechStop: "Error stopping speech recognition: {{message}}",
   chatbotStartRecording: "Start voice recording",

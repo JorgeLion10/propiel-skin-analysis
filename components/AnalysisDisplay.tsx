@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { SkinAnalysisData } from '../types';
@@ -9,9 +7,10 @@ import ProductRecommendationCard from './ProductRecommendationCard';
 import WellnessTipCard from './WellnessTipCard';
 import { ChevronDownIcon, InfoIcon, DownloadIcon } from './icons';
 import { useTranslation } from '../contexts/LanguageContext';
-// IMPORTS NUEVOS:
-import { Filesystem, Directory } from '@capacitor/filesystem'; // Asegúrate de haber instalado @capacitor/filesystem
-import { Capacitor } from '@capacitor/core'; // Necesario para detectar si estamos en una plataforma nativa
+// IMPORTS NECESARIOS:
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import { FileOpener } from '@capacitor-community/file-opener'; // <--- NUEVO IMPORT AQUÍ
 
 
 interface AnalysisDisplayProps {
@@ -122,7 +121,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisData, onReset
       // General Impression
       doc.setFontSize(14);
       doc.setTextColor(primaryColor);
-      yPos = addText(t('analysisSectionCharacteristics'), margin, yPos, { isTitle: true });
+      yPos = addText(t('analysisSectionCharacteristics'), margin, yPos, { isTitle: true }); // This title appears twice
       doc.setFontSize(11);
       doc.setTextColor(textColor);
       if (generalImpression) {
@@ -136,7 +135,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisData, onReset
       if (characteristics && characteristics.length > 0) {
         doc.setFontSize(14);
         doc.setTextColor(primaryColor);
-        yPos = addText(t('analysisSectionCharacteristics'), margin, yPos, { isTitle: true });
+        // yPos = addText(t('analysisSectionCharacteristics'), margin, yPos, { isTitle: true }); // Removed duplicate title
         yPos += 2;
         characteristics.forEach(char => {
           if (yPos > pageHeight - margin - 30) { doc.addPage(); yPos = margin; }
@@ -219,8 +218,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisData, onReset
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
           doc.setTextColor(secondaryTextColor);
-          yPos = addText(`  ${t('Type')}: ${prod.type || 'N/A'}`, margin, yPos, {}, contentWidth); // Assuming 'Type' key exists or add it
-          yPos = addText(`  ${t('Reason')}: ${prod.reason || 'N/A'}`, margin, yPos, {}, contentWidth); // Assuming 'Reason' key exists
+          yPos = addText(`  ${t('Type')}: ${prod.type || 'N/A'}`, margin, yPos, {}, contentWidth);
+          yPos = addText(`  ${t('Reason')}: ${prod.reason || 'N/A'}`, margin, yPos, {}, contentWidth);
           yPos += itemSpacing;
         });
         yPos += sectionSpacing;
@@ -257,33 +256,51 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisData, onReset
       yPos = addText(t('analysisDisclaimer'), margin, yPos + 2, {}, contentWidth);
 
       const filename = `ProPiel_Analysis_${new Date().toISOString().split('T')[0]}.pdf`;
-      // --- INICIO DE LA MODIFICACIÓN ---
-      if (Capacitor.isNativePlatform()) { //
-        const pdfOutput = doc.output('datauristring'); // Obtiene el PDF como data URI (Base64 con prefijo)
-        const pdfBase64Data = pdfOutput.split(',')[1]; // Extrae la parte Base64 pura
+      
+      // --- INICIO DE LA MODIFICACIÓN REAL ---
+      if (Capacitor.isNativePlatform()) {
+        const pdfOutput = doc.output('datauristring');
+        const pdfBase64Data = pdfOutput.split(',')[1];
 
         try {
-          await Filesystem.writeFile({
+          // Guardar el archivo
+          const savedFile = await Filesystem.writeFile({
             path: filename,
-            data: pdfBase64Data, //
-            directory: Directory.Documents, // Guardar en la carpeta Documentos
+            data: pdfBase64Data,
+            directory: Directory.Documents, // Puedes seguir usando Directory.Documents
             recursive: true // Crea directorios si no existen
           });
-          setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') + ' (Guardado en Documentos)' });
-        } catch (e) {
-          console.error("Error al guardar PDF en dispositivo:", e);
-          setPdfMessage({ type: 'error', text: t('pdfErrorMessage') + ' (Error de almacenamiento)' });
+
+          // Si se guardó correctamente, intentar abrirlo
+          if (savedFile.uri) {
+            await FileOpener.open({
+              filePath: savedFile.uri, // Utiliza la URI devuelta por Filesystem.writeFile
+              contentType: 'application/pdf',
+              openWithDefault: true, // Intentar abrir con la aplicación predeterminada
+            });
+            setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') + ' ' + t('pdfOpening') }); // Mensaje para indicar que se abre
+          } else {
+            setPdfMessage({ type: 'error', text: t('pdfErrorMessage') + ' (' + t('pdfNoUri') + ')' }); // Nueva clave de traducción
+          }
+
+        } catch (e: any) { // Captura el error para ver si es específico
+          console.error("Error al guardar o abrir PDF en dispositivo:", e);
+          let errorMessage = t('pdfErrorMessage') + ' (' + t('pdfStorageError') + ')'; // Nueva clave
+          if (e.message.includes('Permission denied')) {
+              errorMessage = t('pdfErrorMessage') + ' (' + t('pdfPermissionDenied') + ')'; // Nueva clave
+          }
+          setPdfMessage({ type: 'error', text: errorMessage });
         }
       } else {
         // Lógica para navegadores web (lo que ya tenías con doc.save)
-        doc.save(filename); //
+        doc.save(filename);
         setPdfMessage({ type: 'success', text: t('pdfSuccessMessage') });
       }
-      // --- FIN DE LA MODIFICACIÓN ---
+      // --- FIN DE LA MODIFICACIÓN REAL ---
 
-    } catch (error) {
+    } catch (error: any) { // Asegúrate de que el tipo de error sea 'any' o 'Error'
       console.error("Failed to generate PDF:", error);
-      setPdfMessage({ type: 'error', text: t('pdfErrorMessage') });
+      setPdfMessage({ type: 'error', text: t('pdfErrorMessage') + ': ' + (error.message || t('error.unknown')) }); // Mejor manejo de errores
     } finally {
       setIsDownloadingPdf(false);
     }

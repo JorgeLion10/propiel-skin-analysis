@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage, SkinAnalysisData } from '../../types';
 import { aiInstance } from '../../services/geminiService';
@@ -24,7 +23,6 @@ declare global {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
-
 // Helper to convert File to a structure suitable for Gemini API's inlineData
 const fileToGenerativePart = async (file: File): Promise<{ mimeType: string; data: string } | null> => {
   return new Promise((resolve, reject) => {
@@ -34,17 +32,16 @@ const fileToGenerativePart = async (file: File): Promise<{ mimeType: string; dat
       const parts = result.split(';base64,');
       if (parts.length === 2) {
         const mimeType = parts[0].split(':')[1];
-        // Ensure the mimeType is one we explicitly allow, even if browser reports something slightly different for e.g. HEIC
         const finalMimeType = ALLOWED_IMAGE_TYPES.includes(file.type) ? file.type : (ALLOWED_IMAGE_TYPES.includes(mimeType) ? mimeType : null);
         if (finalMimeType) {
             resolve({ mimeType: finalMimeType, data: parts[1] });
         } else {
             console.warn(`MIME type ${mimeType} (from base64) or ${file.type} (from file object) not in allowed list.`);
-            resolve(null); // Or reject specific error
+            resolve(null);
         }
       } else {
         console.error("Could not parse base64 string from file reader result.");
-        resolve(null); // Or reject specific error
+        resolve(null);
       }
     };
     reader.onerror = (error) => {
@@ -63,7 +60,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [errorKey, setErrorKey] = useState<string | null>(null); // For general API errors
+  const [errorKey, setErrorKey] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,10 +68,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
-
   const quickReplies = [
     t('chatbotQuickReply1'),
     t('chatbotQuickReply2'),
+    // t('chatbotQuickReply3'), // Asegúrate de que existan si los usas
+    // t('chatbotQuickReply4'), // Asegúrate de que existan si los usas
   ];
 
   const addSystemMessage = useCallback((textKey: string, params?: Record<string, string | number>) => {
@@ -88,7 +86,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
 
   const getSystemInstruction = useCallback(() => {
     return t('geminiSystemInstruction');
-  }, [t]); 
+  }, [t]);
 
   useEffect(() => {
     if (isOpen && !chatSession) {
@@ -109,11 +107,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
         recognitionRef.current.stop();
         setIsListening(false);
       }
-      // Reset image selection when closing
       setSelectedImageFile(null);
       setImagePreviewUrl(null);
     }
-  }, [isOpen, chatSession, t, getSystemInstruction]); // language removed as getSystemInstruction now only depends on t
+  }, [isOpen, chatSession, t, getSystemInstruction, isListening]); // Added isListening to dependencies
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -134,13 +131,13 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
       sentImage: currentSelectedImageFile && currentImagePreviewUrl ? { dataUrl: currentImagePreviewUrl, name: currentSelectedImageFile.name } : undefined,
     };
     setMessages(prev => [...prev, userMessage]);
-    
+
     setInputValue('');
     setSelectedImageFile(null);
     setImagePreviewUrl(null);
     setIsLoading(true);
     setErrorKey(null);
-    
+
     const loadingBotMessageId = `bot-loading-${Date.now()}`;
     setMessages(prev => [...prev, {
         id: loadingBotMessageId,
@@ -154,17 +151,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
       const apiParts: Part[] = [];
       let promptText = currentInputValue.trim();
 
-      // Add skin analysis context if available and it's one of the first user messages
       if (skinAnalysisData && messages.filter(m => m.sender === 'user').length <= 1) {
         const profileSummary = `Contexto de mi piel (en ${language}): Impresión general: "${skinAnalysisData.generalImpression}". Características notables: ${skinAnalysisData.characteristics.slice(0,3).map(c => `${c.nameKey ? t(c.nameKey) : c.name} (puntuación ${c.score})`).join(', ')}.`;
         if (promptText) {
             promptText = `${profileSummary}\n\nMi pregunta es: ${promptText}`;
         } else {
-            // If no text but image and context, provide context for the image.
             promptText = `${profileSummary}\n\nAnaliza la imagen adjunta en relación a este contexto de piel.`;
         }
       }
-
 
       if (currentSelectedImageFile) {
         const imagePartData = await fileToGenerativePart(currentSelectedImageFile);
@@ -177,19 +171,15 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
           return;
         }
       }
-      
+
       if (promptText) {
-         // Prepend text part if it exists, so image comes after. This is a common convention.
-        apiParts.unshift({ text: promptText });
+         apiParts.unshift({ text: promptText });
       } else if (apiParts.length > 0 && !promptText) {
-        // If only image is sent, might need a default prompt depending on model behavior
-        // For now, sending only imagePart. System instruction should guide this.
-        // Or, add a default text part: apiParts.unshift({ text: "Describe or analyze this image." });
+          // If only image is sent without text, add a generic prompt to guide the model.
+          apiParts.unshift({ text: t('chatbotImageAnalysisPrompt') }); // NEW: Add a key for this prompt
       }
 
-
       if (apiParts.length === 0) {
-        // This case should ideally be prevented by button disable logic
         setIsLoading(false);
         setMessages(prev => prev.filter(m => m.id !== loadingBotMessageId));
         return;
@@ -197,7 +187,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
 
       const response: GenerateContentResponse = await chatSession.sendMessage({ message: apiParts });
       const botResponseText = response.text;
-      
+
       const botMessage: ChatMessage = {
         id: Date.now().toString() + '-bot',
         text: botResponseText || t('chatbotNoResponse') || '',
@@ -208,7 +198,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
 
     } catch (err: any) {
       console.error("Chatbot API error:", err);
-      setErrorKey("chatbotErrorGeneral"); 
+      setErrorKey("chatbotErrorGeneral");
       setMessages(prev => prev.filter(m => m.id !== loadingBotMessageId).concat({
         id: Date.now().toString() + '-error',
         text: t('chatbotErrorGeneral'),
@@ -226,45 +216,68 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
   };
 
   const handleQuickReply = (replyText: string) => {
-    // If an image is selected, we don't want to clear it with a quick reply.
-    // User might want to ask a question about the selected image.
-    setInputValue(replyText); 
-    // Trigger send immediately, assuming quick replies are self-contained or will use the image context if present
-    // We must pass the current inputValue because state update might not be immediate
-    // For simplicity, let's assume quick replies don't need separate image uploads.
-    // If image is selected, it will be sent with the quick reply text.
-    handleSendMessage(); 
+    setInputValue(replyText);
+    // Send immediately, assuming quick replies don't need a separate image selection process
+    // The image, if selected, will be sent along with this text.
+    handleSendMessage();
   };
-  
+
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognitionAPI) {
       recognitionRef.current = new SpeechRecognitionAPI();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true; // CAMBIO CLAVE: Permite escuchar continuamente
+      recognitionRef.current.interimResults = true; // CAMBIO CLAVE: Obtiene resultados provisionales
       recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
 
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(transcript);
-        setIsListening(false);
+      let finalTranscript = ''; // Almacena el resultado final
+
+      recognitionRef.current.onstart = () => {
+          console.log('Speech recognition started.');
+          setErrorKey(null); // Clear previous errors on start
       };
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        // Muestra el texto provisional en el input para retroalimentación
+        setInputValue(finalTranscript + interimTranscript);
+      };
+
       recognitionRef.current.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
-        let specificErrorKey = "chatbotErrorGeneral"; 
+        let specificErrorKey = "chatbotErrorGeneral";
         if (event.error === 'no-speech') specificErrorKey = "chatbotErrorSpeechNoSound";
         else if (event.error === 'audio-capture') specificErrorKey = "chatbotErrorSpeechAudioCapture";
         else if (event.error === 'not-allowed') specificErrorKey = "chatbotErrorSpeechNotAllowed";
         addSystemMessage(specificErrorKey);
         setIsListening(false);
+        finalTranscript = ''; // Reset transcript on error
       };
+
       recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended.');
         setIsListening(false);
+        // Si hay un resultado final, úsalo para enviar el mensaje
+        if (finalTranscript.trim() !== '') {
+          setInputValue(finalTranscript); // Establece el input con el texto final
+          // handleSendMessage(); // No llamar aquí directamente si el botón de envío lo maneja
+        }
+        finalTranscript = ''; // Reset para la próxima vez
       };
+
     } else {
       console.warn("Speech Recognition API not supported in this browser.");
+      addSystemMessage("chatbotErrorUnsupported"); // Show this if API is not supported
     }
-     if (recognitionRef.current) {
+
+    if (recognitionRef.current) {
         recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
     }
     return () => {
@@ -272,7 +285,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
             recognitionRef.current.stop();
         }
     };
-  }, [language, addSystemMessage]);
+  }, [language, addSystemMessage, handleSendMessage]); // Added handleSendMessage to dependencies
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -280,13 +293,15 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
       return;
     }
     if (isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current.stop(); // Detiene la grabación
+      // Cuando se detiene, onend se encargará de procesar finalTranscript
     } else {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(() => {
+          setInputValue(''); // Clear previous input before starting speech
           recognitionRef.current.start();
           setIsListening(true);
-          setErrorKey(null); 
+          setErrorKey(null);
         })
         .catch(err => {
           console.error("Microphone access denied or error:", err);
@@ -309,7 +324,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
         addSystemMessage('chatbotErrorFileTypeUnsupported');
         setSelectedImageFile(null);
         setImagePreviewUrl(null);
-        if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+        if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
@@ -331,7 +346,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
   const handleRemoveImage = () => {
     setSelectedImageFile(null);
     setImagePreviewUrl(null);
-    if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+    if(fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const triggerFileInput = () => {
@@ -365,7 +380,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
           ))}
           <div ref={messagesEndRef} />
         </div>
-        
+
         {imagePreviewUrl && (
           <div className="p-3 border-t border-gray-200 dark:border-gray-700">
             <div className="relative inline-block group">
@@ -428,7 +443,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={t('chatbotInputPlaceholder')}
+            placeholder={isListening ? t('chatbotListeningPlaceholder') : t('chatbotInputPlaceholder')}// {/* NEW: Dynamic placeholder */}
             className="flex-1 min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
             aria-label={t('chatbotInputPlaceholder')}
             disabled={isLoading}
