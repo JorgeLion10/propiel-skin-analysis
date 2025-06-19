@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage, SkinAnalysisData } from '../../types';
 import { aiInstance } from '../../services/geminiService';
@@ -6,6 +5,7 @@ import { Chat, GenerateContentResponse, Part } from '@google/genai';
 import ChatMessageBubble from './ChatMessageBubble';
 import { SendIcon, MicrophoneIcon, CloseIconX, ProPielChatbotIcon, PhotoIcon, ChatbotHeaderIcon } from '../icons'; // Updated import
 import { useTranslation } from '../../contexts/LanguageContext';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition'; // <--- ADD THIS IMPORT
 
 interface ChatbotProps {
   isOpen: boolean;
@@ -13,12 +13,13 @@ interface ChatbotProps {
   skinAnalysisData: SkinAnalysisData | null;
 }
 
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
-  }
-}
+// Remove or comment out this entire block as it's for Web Speech API
+// declare global {
+//   interface Window {
+//     webkitSpeechRecognition: any;
+//     SpeechRecognition: any;
+//   }
+// }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
@@ -62,11 +63,15 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
   const [isListening, setIsListening] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  // REMOVE OR COMMENT OUT THIS LINE IF IT'S PRESENT IN YOUR ORIGINAL FILE
+  // const recognitionRef = useRef<any>(null); // This was for Web Speech API
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  const SpeechRecognitionAvailable = useRef(false); // <--- KEEP THIS REF
 
   const quickReplies = [
     t('chatbotQuickReply1'),
@@ -103,14 +108,39 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
         timestamp: new Date(),
       }]);
     } else if (!isOpen) {
-      if (recognitionRef.current && isListening) {
-        recognitionRef.current.stop();
+      // recognitionRef.current logic removed as it's for Web Speech API
+      if (isListening) {
+        SpeechRecognition.stop().catch(e => console.error("Error stopping recognition on close:", e));
         setIsListening(false);
       }
       setSelectedImageFile(null);
       setImagePreviewUrl(null);
     }
-  }, [isOpen, chatSession, t, getSystemInstruction, isListening]); // Added isListening to dependencies
+  }, [isOpen, chatSession, t, getSystemInstruction, isListening]);
+
+  // NEW useEffect for checking Speech Recognition Availability
+  useEffect(() => {
+      const checkAvailability = async () => {
+          try {
+              const { available } = await SpeechRecognition.available();
+              SpeechRecognitionAvailable.current = available;
+              if (!available) {
+                  addSystemMessage("chatbotErrorUnsupportedSpeech");
+              }
+          } catch (err) {
+              console.error("Error checking speech recognition availability:", err);
+              addSystemMessage("chatbotErrorUnsupportedSpeech");
+          }
+      };
+
+      checkAvailability();
+
+      return () => {
+          if (isListening) {
+              SpeechRecognition.stop().catch(e => console.error("Error stopping recognition on cleanup:", e));
+          }
+      };
+  }, [language, addSystemMessage, isListening]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -176,7 +206,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
          apiParts.unshift({ text: promptText });
       } else if (apiParts.length > 0 && !promptText) {
           // If only image is sent without text, add a generic prompt to guide the model.
-          apiParts.unshift({ text: t('chatbotImageAnalysisPrompt') }); // NEW: Add a key for this prompt
+          apiParts.unshift({ text: t('chatbotImageAnalysisPrompt') });
       }
 
       if (apiParts.length === 0) {
@@ -217,105 +247,77 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
 
   const handleQuickReply = (replyText: string) => {
     setInputValue(replyText);
-    // Send immediately, assuming quick replies don't need a separate image selection process
-    // The image, if selected, will be sent along with this text.
     handleSendMessage();
   };
 
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognitionAPI) {
-      recognitionRef.current = new SpeechRecognitionAPI();
-      recognitionRef.current.continuous = true; // CAMBIO CLAVE: Permite escuchar continuamente
-      recognitionRef.current.interimResults = true; // CAMBIO CLAVE: Obtiene resultados provisionales
-      recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
+  // REMOVE THE OLD useEffect block for Web Speech API entirely.
+  // The new useEffect for SpeechRecognitionAvailability above replaces its core functionality.
 
-      let finalTranscript = ''; // Almacena el resultado final
 
-      recognitionRef.current.onstart = () => {
-          console.log('Speech recognition started.');
-          setErrorKey(null); // Clear previous errors on start
-      };
-
-      recognitionRef.current.onresult = (event: any) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        // Muestra el texto provisional en el input para retroalimentación
-        setInputValue(finalTranscript + interimTranscript);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        let specificErrorKey = "chatbotErrorGeneral";
-        if (event.error === 'no-speech') specificErrorKey = "chatbotErrorSpeechNoSound";
-        else if (event.error === 'audio-capture') specificErrorKey = "chatbotErrorSpeechAudioCapture";
-        else if (event.error === 'not-allowed') specificErrorKey = "chatbotErrorSpeechNotAllowed";
-        addSystemMessage(specificErrorKey);
-        setIsListening(false);
-        finalTranscript = ''; // Reset transcript on error
-      };
-
-      recognitionRef.current.onend = () => {
-        console.log('Speech recognition ended.');
-        setIsListening(false);
-        // Si hay un resultado final, úsalo para enviar el mensaje
-        if (finalTranscript.trim() !== '') {
-          setInputValue(finalTranscript); // Establece el input con el texto final
-          // handleSendMessage(); // No llamar aquí directamente si el botón de envío lo maneja
-        }
-        finalTranscript = ''; // Reset para la próxima vez
-      };
-
-    } else {
-      console.warn("Speech Recognition API not supported in this browser.");
-      addSystemMessage("chatbotErrorUnsupported"); // Show this if API is not supported
+  // Inside Chatbot functional component
+const toggleListening = async () => { // <--- UPDATED function with 'async'
+    if (!SpeechRecognitionAvailable.current) {
+        addSystemMessage("chatbotErrorUnsupportedSpeech");
+        return;
     }
 
-    if (recognitionRef.current) {
-        recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
-    }
-    return () => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
-        }
-    };
-  }, [language, addSystemMessage, handleSendMessage]); // Added handleSendMessage to dependencies
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-       addSystemMessage("chatbotErrorUnsupported");
-      return;
-    }
     if (isListening) {
-      recognitionRef.current.stop(); // Detiene la grabación
-      // Cuando se detiene, onend se encargará de procesar finalTranscript
+        // Stop listening
+        try {
+            await SpeechRecognition.stop();
+            setIsListening(false);
+            // The final transcript will be in inputValue, which will be sent by handleSendMessage
+            if (inputValue.trim() !== '') {
+                handleSendMessage(); // Trigger send after stopping
+            }
+        } catch (error: any) {
+            console.error("Error stopping speech recognition:", error);
+            addSystemMessage("chatbotErrorSpeechStop", { message: error.message || t('error.unknown') });
+            setIsListening(false);
+        }
     } else {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          setInputValue(''); // Clear previous input before starting speech
-          recognitionRef.current.start();
-          setIsListening(true);
-          setErrorKey(null);
-        })
-        .catch(err => {
-          console.error("Microphone access denied or error:", err);
-          let permissionErrorKey = "chatbotErrorMicPermission";
-          if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            permissionErrorKey = "chatbotErrorMicPermissionDenied";
-          } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError"){
-            permissionErrorKey = "chatbotErrorMicNotFound";
-          }
-          addSystemMessage(permissionErrorKey);
-          setIsListening(false);
-        });
+        // Start listening
+        try {
+            // Check for 'speechRecognition' property on permissionStatus
+            const permissionStatus = await SpeechRecognition.requestPermissions();
+
+            if (permissionStatus.speechRecognition === 'granted') {
+                setInputValue(''); // Clear previous input before starting speech
+                setErrorKey(null);
+
+                setIsListening(true);
+                addSystemMessage('chatbotListeningPlaceholder'); // Inform user it's listening
+
+                const result = await SpeechRecognition.start({
+                    language: language === 'es' ? 'es-ES' : 'en-US',
+                    partialResults: false,
+                });
+
+                if (result && result.matches && result.matches.length > 0) {
+                    setInputValue(result.matches[0]); // Set the input with the final detected speech
+                } else {
+                    addSystemMessage("chatbotErrorSpeechNoSound");
+                    setInputValue('');
+                }
+                setIsListening(false); // Once start() promise resolves, it means it's done listening
+            } else {
+                addSystemMessage("chatbotErrorMicPermissionDenied");
+            }
+        } catch (err: any) {
+            console.error("Microphone access denied or error:", err);
+            let permissionErrorKey = "chatbotErrorMicPermission";
+            if (err.message.includes("NotAllowedError") || err.message.includes("Permission denied")) {
+                permissionErrorKey = "chatbotErrorMicPermissionDenied";
+            } else if (err.message.includes("NotFoundError") || err.message.includes("DevicesNotFoundError")) {
+                permissionErrorKey = "chatbotErrorMicNotFound";
+            } else if (err.message.includes("unsupported on web")) {
+                 permissionErrorKey = "chatbotErrorUnsupportedSpeech";
+            }
+            addSystemMessage(permissionErrorKey);
+            setIsListening(false);
+        }
     }
-  };
+};
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -443,7 +445,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, skinAnalysisData }) 
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={isListening ? t('chatbotListeningPlaceholder') : t('chatbotInputPlaceholder')}// {/* NEW: Dynamic placeholder */}
+            placeholder={isListening ? t('chatbotListeningPlaceholder') : t('chatbotInputPlaceholder')}
             className="flex-1 min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
             aria-label={t('chatbotInputPlaceholder')}
             disabled={isLoading}
