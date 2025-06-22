@@ -433,10 +433,12 @@ const toggleListening = async () => { // <--- UPDATED function with 'async'
           >
             <PhotoIcon className="w-5 h-5" />
           </button>
-          <button
+             <button
             type="button"
             onClick={toggleListening}
-            className={`p-2 rounded-full ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'} transition-colors flex-shrink-0`}
+            
+            style={isListening ? { backgroundColor: '#14e3eb' } : {}} 
+            className={`p-2 rounded-full ${isListening ? 'text-white animate-pulse' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'} transition-colors flex-shrink-0`}
             aria-label={isListening ? t("chatbotStopListeningButtonLabel") : t("chatbotMicButtonLabel")}
           >
             <MicrophoneIcon className="w-5 h-5" isListening={isListening}/>

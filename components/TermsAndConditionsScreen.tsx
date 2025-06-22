@@ -28,9 +28,10 @@ const TermsAndConditionsScreen: React.FC<TermsAndConditionsScreenProps> = ({ onC
 
       <main className="flex-grow overflow-y-auto p-4 sm:p-6">
         <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8 text-gray-700 dark:text-gray-300">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">TÉRMINOS Y CONDICIONES</h2>
           <p className="font-semibold mb-2">Fecha de vigencia: [11/06/2025]</p>
           <p className="mb-6">
-            Bienvenido(a) a nuestra aplicación de Propiel. Al utilizar esta aplicación, aceptas los
+            Bienvenido(a) a nuestra aplicación de Propiel-Skin-Analysis. Al utilizar esta aplicación, aceptas los
             siguientes Términos y Condiciones. Si no estás de acuerdo con alguno de ellos, por favor
             no utilices esta aplicación.
           </p>
@@ -41,6 +42,8 @@ const TermsAndConditionsScreen: React.FC<TermsAndConditionsScreenProps> = ({ onC
               Nuestra aplicación permite a los usuarios realizar escaneos faciales con fines informativos,
               interactuar con un chatbot inteligente, y acceder a diferentes funcionalidades de
               configuración y sugerencias.
+              <br />
+              Los escaneos faciales y las respuestas del chatbot son generados por modelos de inteligencia artificial y deben considerarse como apoyo informativo.
             </p>
           </section>
 
@@ -66,7 +69,7 @@ const TermsAndConditionsScreen: React.FC<TermsAndConditionsScreenProps> = ({ onC
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">4. Exoneración de responsabilidad</h2>
             <ul className="list-disc list-inside space-y-1 pl-4">
               <li>Los resultados del escaneo facial son estimaciones informativas y no deben ser
-                  considerados diagnósticos ni recomendaciones médicas.</li>
+                  considerados diagnósticos ni recomendaciones médicas. La información proporcionada por la IA no sustituye el consejo de un profesional de la salud o un dermatólogo.</li>
               <li>No garantizamos que el servicio estará libre de errores o disponible en todo
                   momento.</li>
             </ul>
