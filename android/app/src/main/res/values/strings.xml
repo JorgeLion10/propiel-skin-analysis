@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">propiel---ai-skin-analysis</string>
-    <string name="title_activity_main">propiel---ai-skin-analysis</string>
+    <string name="app_name">ProPiel Skin Analysis</string> // 
+    <string name="title_activity_main">ProPiel Skin Analysis</string> // 
     <string name="package_name">cl.propiel.propielskinanalysis</string>
     <string name="custom_url_scheme">cl.propiel.propielskinanalysis</string>
 </resources>
