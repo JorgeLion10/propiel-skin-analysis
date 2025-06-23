@@ -82,12 +82,12 @@ const IdleHomeScreen: React.FC<IdleHomeScreenProps> = ({ onStartScan, facialTrea
         <img
           src="https://res.cloudinary.com/dpeqsbohh/image/upload/v1749788459/Skin-Analysis_2_ge6pzr.png"
           alt={t('headerTitle') + " Logo Light Mode"}
-          className="w-32 h-32 object-contain mb-3 mx-auto block dark:hidden"
+          className="w-48 h-48 object-contain mb-3 mx-auto block dark:hidden" // CAMBIADO AQUÍ
         />
         <img
           src="https://res.cloudinary.com/dpeqsbohh/image/upload/v1749789723/Skin-Analysis_4_hzqkaw.png"
           alt={t('headerTitle') + " Logo Dark Mode"}
-          className="w-32 h-32 object-contain mb-3 mx-auto hidden dark:block"
+          className="w-48 h-48 object-contain mb-3 mx-auto hidden dark:block" // CAMBIADO AQUÍ
         />
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3 h-10 sm:h-auto whitespace-nowrap">
           {welcomeText}

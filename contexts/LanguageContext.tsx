@@ -52,9 +52,14 @@ const esTranslations: Translations = {
   cameraErrorConstraint: "La cámara no admite la configuración solicitada.",
   cameraErrorCapture: "No se pudo capturar la imagen. La cámara podría no estar activa.",
   cameraErrorGeneric: "Error de cámara: {{message}}",
+  cameraInstructionCenterFace: "Centra tu rostro en el círculo", // NUEVA CLAVE
+  cameraInstructionReady: "Toca 'Escanear Rostro' para continuar", // NUEVA CLAVE
   cameraCloseButton: "Cerrar",
   // Loading Spinner
   loadingAnalysis: "Analizando tu piel...",
+  loadingIdentifying: "Identificando características clave...",
+  loadingGenerating: "Generando tu rutina personalizada...",
+  loadingFinalizing: "Optimizando tus recomendaciones...",
   // Error Message (Full screen)
   errorOops: "¡Oops!",
   errorTryAgainButton: "Intentar de Nuevo", // Reused for modal
@@ -254,9 +259,14 @@ const enTranslations: Translations = {
   cameraErrorConstraint: "The camera does not support the requested settings.",
   cameraErrorCapture: "Could not capture image. Camera might not be active.",
   cameraErrorGeneric: "Camera error: {{message}}",
+  cameraInstructionCenterFace: "Center your face in the circle", // NEW KEY
+  cameraInstructionReady: "Tap 'Scan Face' to proceed", // NEW KEY
   cameraCloseButton: "Close",
   // Loading Spinner
   loadingAnalysis: "Analyzing your skin...",
+  loadingIdentifying: "Identifying key characteristics...",
+  loadingGenerating: "Generating your personalized routine...",
+  loadingFinalizing: "Optimizing your recommendations...",
   // Error Message (Full screen)
   errorOops: "Oops!",
   errorTryAgainButton: "Try Again", // Reused for modal

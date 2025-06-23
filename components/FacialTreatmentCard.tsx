@@ -19,8 +19,8 @@ const FacialTreatmentCard: React.FC<FacialTreatmentCardProps> = ({ service }) =>
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <img
         src={service.imageUrl}
-        alt={t(service.nameKey)} // Translate alt text
-        className="w-full h-48 object-cover rounded-t-xl" // Added rounded-t-xl, consistent height
+        alt={t(service.nameKey)}
+        className="w-full h-36 object-cover rounded-t-xl" // <--- CAMBIADO h-48 a h-36
         onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/400x225.png?text=Imagen+no+disponible')}
       />
       <div className="p-5 sm:p-6 flex flex-col flex-grow"> {/* Increased padding */}

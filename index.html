@@ -44,11 +44,14 @@
 
       body {
         font-family: 'Inter', sans-serif;
+        -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
       }
       /* Custom scrollbar for a cleaner look */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
+        display: none;
       }
       ::-webkit-scrollbar-track {
         background: transparent;
@@ -96,13 +99,33 @@
         50% { color: inherit; } /* Inherits text color */
       }
 
+
+      .fade-in-out-text {
+    /* La animación usa la variable CSS --message-cycle-time definida en el componente React */
+    animation: fade-in-out var(--message-cycle-time) ease-in-out forwards;
+  }
+
+  @keyframes fade-in-out {
+    0% { opacity: 0; }     /* Empieza completamente transparente */
+    15% { opacity: 1; }    /* Se vuelve completamente visible rápidamente */
+    85% { opacity: 1; }    /* Permanece visible la mayor parte del tiempo */
+    100% { opacity: 0; }   /* Se vuelve transparente al final del ciclo */
+  }
+
+   .vignette-overlay {
+    box-shadow: inset 0px 0px 100px rgba(0, 0, 0, 0.9); /* Sombra suave para los bordes */
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.8) 100%);
+  }
+  
       /* Dark mode logo adjustment - REMOVED as separate images are used now */
       /*
       .dark .propiel-logo-img {
         filter: invert(1) hue-rotate(180deg);
       }
       */
-    </style>
+</style>
+
+    
   <script type="importmap">
 {
   "imports": {
